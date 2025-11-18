@@ -1,0 +1,14 @@
+node_modules
+.env
+.env.*
+dist
+tmp
+coverage
+.next
+out
+apps/backend/dist
+apps/backend/node_modules
+apps/web/node_modules
+apps/web/.next
+apps/web/out
+.DS_Store

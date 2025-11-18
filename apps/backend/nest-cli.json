@@ -1,0 +1,14 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "tsConfigPath": "tsconfig.build.json",
+    "deleteOutDir": true,
+    "assets": [
+      {
+        "include": "templates/mail/**/*",
+        "outDir": "dist/templates/mail"
+      }
+    ]
+  }
+}

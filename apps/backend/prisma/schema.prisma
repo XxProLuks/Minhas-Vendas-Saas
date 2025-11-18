@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum PlanType {
+  FREE
+  PRO
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INACTIVE
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT
+  DEBIT
+  CASH
+}
+
+enum SaleStatus {
+  PAID
+  PENDING
+}
+
+model User {
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  password         String
+  phone            String?
+  role             Role              @default(USER)
+  plan             PlanType          @default(FREE)
+  planExpiresAt    DateTime?
+  emailVerifiedAt  DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  sales            Sale[]
+  expenses         Expense[]
+  customers        Customer[]
+  refreshTokens    RefreshToken[]
+  subscriptions    Subscription[]
+  emailVerifications EmailVerification[]
+  passwordResets   PasswordReset[]
+}
+
+model Customer {
+  id          String    @id @default(uuid())
+  name        String
+  phone       String?
+  address     String?
+  notes       String?
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  sales       Sale[]
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Sale {
+  id             String        @id @default(uuid())
+  description    String
+  amount         Decimal       @db.Decimal(10, 2)
+  paymentMethod  PaymentMethod
+  status         SaleStatus    @default(PAID)
+  soldAt         DateTime      @default(now())
+  userId         String
+  customerId     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer       Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+}
+
+model Expense {
+  id         String   @id @default(uuid())
+  title      String
+  amount     Decimal  @db.Decimal(10, 2)
+  occurredAt DateTime @default(now())
+  notes      String?
+  userId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id              String              @id @default(uuid())
+  userId          String
+  plan            PlanType
+  status          SubscriptionStatus  @default(ACTIVE)
+  providerId      String              @unique
+  currentPeriodEnd DateTime?
+  cancelAtPeriodEnd Boolean           @default(false)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailVerification {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
