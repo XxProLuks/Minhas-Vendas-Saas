@@ -69,7 +69,7 @@ export class ReportsService {
       return { start, end };
     });
 
-    const results = [];
+    const results: Array<{ month: string; sales: number; expenses: number }> = [];
 
     for (const bucket of buckets) {
       const [sales, expenses] = await Promise.all([

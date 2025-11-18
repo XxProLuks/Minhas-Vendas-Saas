@@ -105,8 +105,19 @@ export class BillingService {
       }
     });
 
+    const subscriptionId = response.id;
+    if (!subscriptionId) {
+      this.logger.error('Mercado Pago preapproval response did not include an id');
+      throw new Error('Falha ao criar assinatura no Mercado Pago');
+    }
+
+    const sandboxInitPoint = (() => {
+      const value = (response as { sandbox_init_point?: string }).sandbox_init_point;
+      return typeof value === 'string' ? value : undefined;
+    })();
+
     await this.prisma.subscription.upsert({
-      where: { providerId: response.id },
+      where: { providerId: subscriptionId },
       update: {
         plan,
         status: SubscriptionStatus.INACTIVE,
@@ -115,16 +126,16 @@ export class BillingService {
       create: {
         userId: user.id,
         plan,
-        providerId: response.id,
+        providerId: subscriptionId,
         status: SubscriptionStatus.INACTIVE
       }
     });
 
     return {
       type: 'checkout',
-      initPoint: response.init_point,
-      sandboxInitPoint: response.sandbox_init_point,
-      subscriptionId: response.id
+      initPoint: response.init_point ?? undefined,
+      sandboxInitPoint,
+      subscriptionId
     };
   }
 
@@ -173,22 +184,29 @@ export class BillingService {
         return { received: true };
       }
 
+      const preapprovalId = preapproval.id;
+      if (!preapprovalId) {
+        this.logger.warn(`Preapproval ${payload.data.id} is missing an id`);
+        return { received: true };
+      }
+
       const userId = preapproval.external_reference;
       if (!userId) {
         this.logger.warn(`Preapproval ${payload.data.id} missing external reference`);
         return { received: true };
       }
 
-      const plan = this.resolvePlan(preapproval.preapproval_plan_id);
+      const plan = this.resolvePlan((preapproval as { preapproval_plan_id?: string }).preapproval_plan_id);
+      const autoRecurring = (preapproval as { auto_recurring?: { end_date?: string | null } }).auto_recurring;
       const status = this.mapStatus(preapproval.status as MercadoPagoStatus);
-      const periodEnd = preapproval.auto_recurring?.end_date
-        ? new Date(preapproval.auto_recurring.end_date)
+      const periodEnd = autoRecurring?.end_date
+        ? new Date(autoRecurring.end_date)
         : preapproval.next_payment_date
           ? new Date(preapproval.next_payment_date)
           : null;
 
       await this.prisma.subscription.upsert({
-        where: { providerId: preapproval.id },
+        where: { providerId: preapprovalId },
         update: {
           status,
           plan,
@@ -198,7 +216,7 @@ export class BillingService {
         create: {
           userId,
           plan,
-          providerId: preapproval.id,
+          providerId: preapprovalId,
           status,
           currentPeriodEnd: periodEnd,
           cancelAtPeriodEnd: preapproval.status === 'paused'

@@ -1,8 +1,8 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as cookieParser from 'cookie-parser';
-import * as csurf from 'csurf';
+import cookieParser from 'cookie-parser';
+import csurf from 'csurf';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module.js';

@@ -25,10 +25,12 @@ import { UsersModule } from './users/users.module.js';
       load: [appConfig, mercadopagoConfig, resendConfig]
     }),
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot({
-      ttl: 60,
-      limit: 100
-    }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,
+        limit: 100
+      }
+    ]),
     PrismaModule,
     AuthModule,
     UsersModule,
