@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+dist
+.git
+.github
+.husky
+.DS_Store
+tmp
+coverage
+.env
+.env.*
+apps/backend/node_modules
+apps/backend/dist
+apps/web/node_modules
+apps/web/.next
+apps/web/out

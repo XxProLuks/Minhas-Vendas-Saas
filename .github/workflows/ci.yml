@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: minhas_vendas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" 
+          --health-interval 5s 
+          --health-timeout 3s 
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies (workspaces)
+        run: npm ci --workspaces
+
+      - name: Lint
+        run: npm run lint --workspaces
+
+      - name: Prisma generate (backend)
+        run: npm run -w apps/backend prisma:generate
+
+      - name: Apply migrations (backend)
+        env:
+          PGUSER: postgres
+          PGHOST: localhost
+          PGDATABASE: minhas_vendas
+          PGPORT: 5432
+        run: |
+          export DATABASE_URL="postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}?schema=public"
+          npm run -w apps/backend prisma:deploy
+
+      - name: Build
+        run: npm run build --workspaces
+
+      - name: Test
+        run: npm run test --workspaces
