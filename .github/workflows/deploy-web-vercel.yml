@@ -2,7 +2,7 @@ name: Deploy Web to Vercel
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "staging"]
     paths:
       - "apps/web/**"
       - "package.json"
@@ -30,11 +30,23 @@ jobs:
       - name: Install dependencies (workspaces)
         run: npm ci --workspaces
 
-      - name: Pull Vercel env (production)
-        run: npx vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN" --cwd apps/web
+      - name: Determine environment
+        id: env
+        run: |
+          BRANCH="${GITHUB_REF##*/}"
+          if [ "$BRANCH" = "main" ]; then
+            echo "env=production" >> $GITHUB_OUTPUT
+            echo "prod_flag=--prod" >> $GITHUB_OUTPUT
+          else
+            echo "env=preview" >> $GITHUB_OUTPUT
+            echo "prod_flag=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Pull Vercel env
+        run: npx vercel@latest pull --yes --environment=${{ steps.env.outputs.env }} --token "$VERCEL_TOKEN" --cwd apps/web
 
       - name: Build (Vercel)
-        run: npx vercel@latest build --prod --token "$VERCEL_TOKEN" --cwd apps/web
+        run: npx vercel@latest build ${{ steps.env.outputs.prod_flag }} --token "$VERCEL_TOKEN" --cwd apps/web
 
       - name: Deploy (Vercel)
-        run: npx vercel@latest deploy --prebuilt --prod --token "$VERCEL_TOKEN" --cwd apps/web
+        run: npx vercel@latest deploy --prebuilt ${{ steps.env.outputs.prod_flag }} --token "$VERCEL_TOKEN" --cwd apps/web
