@@ -26,8 +26,9 @@ COPY package.json package-lock.json ./
 COPY apps/backend/package.json ./apps/backend/package.json
 COPY apps/backend/prisma ./apps/backend/prisma
 
-# Install only production dependencies for the backend workspace
-RUN npm ci --omit=dev --workspace apps/backend
+# Install backend deps (inclui dev para executar prisma CLI em runtime)
+RUN npm ci --workspace apps/backend \
+ && npm run -w apps/backend prisma:generate
 
 # Copy built artifacts
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
