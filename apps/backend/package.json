@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nest build",
     "start": "node dist/main.js",
+    "start:prod": "npm run prisma:deploy && node dist/main.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
