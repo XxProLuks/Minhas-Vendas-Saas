@@ -14,6 +14,17 @@ Opção recomendada: Vercel
   - Build Command: `npm run build`
   - Output: padrão do Next (não precisa alterar)
 
+CI/CD via GitHub Actions + Vercel CLI
+1) Adicione os seguintes GitHub Secrets no repositório:
+   - `VERCEL_TOKEN`
+   - `VERCEL_ORG_ID`
+   - `VERCEL_PROJECT_ID`
+   (consiga-os na Vercel em Settings do time/projeto)
+2) Workflow: `.github/workflows/deploy-web-vercel.yml`
+   - Trigger padrão: push na branch `main` (arquivos do web) ou manual via `workflow_dispatch`
+   - Comandos: `vercel pull`, `vercel build --prod`, `vercel deploy --prebuilt --prod`
+3) Ajuste `NEXT_PUBLIC_API_URL` nas envs da Vercel para apontar ao backend público.
+
 Opção Docker (servidor próprio)
 1) Copie `apps/web/.env.example` para `apps/web/.env` e ajuste as variáveis
 2) Rode com compose junto com backend e banco:
