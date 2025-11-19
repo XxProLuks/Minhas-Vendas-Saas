@@ -25,3 +25,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    env_file:
+      - apps/web/.env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3333
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend

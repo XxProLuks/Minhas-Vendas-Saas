@@ -2,6 +2,26 @@
 
 Este guia resume como executar o backend em produção usando Docker e como rodar a pipeline de CI.
 
+### Frontend (Next.js)
+
+Opção recomendada: Vercel
+- Crie um projeto na Vercel com Root Directory = `apps/web`
+- Variáveis (Production):
+  - `NEXT_PUBLIC_API_URL=https://api.seu-dominio.com`
+  - `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY=...`
+- Build & Output Settings (opcional):
+  - Install Command: `npm ci`
+  - Build Command: `npm run build`
+  - Output: padrão do Next (não precisa alterar)
+
+Opção Docker (servidor próprio)
+1) Copie `apps/web/.env.example` para `apps/web/.env` e ajuste as variáveis
+2) Rode com compose junto com backend e banco:
+```
+docker compose up -d --build
+```
+3) Acesse o frontend em `http://localhost:3000`
+
 ### 1) Variáveis de ambiente
 Copie `apps/backend/.env.example` para o local onde você vai injetar variáveis (secrets do provedor, compose, etc.). Nunca versione segredos.
 
@@ -12,7 +32,7 @@ Requisitos: Docker 24+, Compose
 docker compose up -d --build
 ```
 
-O backend expõe `http://localhost:3333` (health: `/health`, docs: `/docs`).
+O backend expõe `http://localhost:3333` (health: `/health`, docs: `/docs`). O frontend expõe `http://localhost:3000`.
 
 Em produção, ajuste:
 - `DATABASE_URL` para seu Postgres gerenciado
@@ -40,3 +60,4 @@ Arquivo: `.github/workflows/ci.yml`
 - CORS: configure `WEB_APP_URL` (aceita múltiplos separados por vírgula).
 - CSRF: habilite `ENABLE_CSRF=true` apenas se usar cookies/same-site.
 - Swagger: atualmente acessível em `/docs`. Proteja via gateway/reverse-proxy ou desative se necessário.
+
